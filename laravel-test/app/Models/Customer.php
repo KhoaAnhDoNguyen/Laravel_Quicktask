@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Str;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Auth\Authenticatable;
 
-class Customer extends Model
+class Customer extends Model implements AuthenticatableContract
 {
-    use HasFactory;
+    use HasFactory, Authenticatable;
 
     /**
      * The table associated with the model.
@@ -27,7 +27,6 @@ class Customer extends Model
         'username', 'password',
     ];
 
-
     /**
      * Indicates if the model should be timestamped.
      *
@@ -40,18 +39,18 @@ class Customer extends Model
         return $this->hasMany(Order::class, 'customer_id');
     }
 
-    //Accessor, Mutator
+    // Accessor, Mutator
     protected function fullName(): Attribute
     {
         return Attribute::make(
             get: fn ($value) => $this->attributes['username'] . ' ' . $this->attributes['password']
         );
-    }      
+    }
 
     protected function userName(): Attribute
     {
         return Attribute::make(
             set: fn ($value) => Str::slug($value)
         );
-    } 
+    }
 }
