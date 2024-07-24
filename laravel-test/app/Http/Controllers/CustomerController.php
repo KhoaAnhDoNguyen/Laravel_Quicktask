@@ -8,64 +8,61 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
+    // Hiển thị danh sách khách hàng
     public function index()
     {
-        return Customer::all();
+        $customers = Customer::all();
+        return view('dashboard', compact('customers'));
     }
 
+    // Hiển thị form tạo mới khách hàng
+    public function create()
+    {
+        return view('customers.create');
+    }
+
+    // Lưu khách hàng mới vào cơ sở dữ liệu
     public function store(Request $request)
     {
-        $customer = Customer::create($request->all());
-        return response()->json($customer, 201);
+        $request->validate([
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $customer = Customer::create([
+            'username' => $request->username,
+            'password' => bcrypt($request->password),
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Customer added successfully.');
     }
 
-    public function show(Customer $customer)
+    // Hiển thị form chỉnh sửa khách hàng
+    public function edit(Customer $customer)
     {
-        return $customer;
+        return view('customers.edit', compact('customer'));
     }
 
+    // Cập nhật thông tin khách hàng
     public function update(Request $request, Customer $customer)
     {
-        $customer->update($request->all());
-        return response()->json($customer, 200);
+        $request->validate([
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $customer->update([
+            'username' => $request->username,
+            'password' => bcrypt($request->password),
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Customer updated successfully.');
     }
 
+    // Xóa khách hàng
     public function destroy(Customer $customer)
     {
         $customer->delete();
-        return response()->json(null, 204);
-    }
-
-    /**
-     * Search customers by username.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function search($request)
-    {
-        $customer = Customer::where('username', $request)->first();
-
-        if ($customer) {
-            return response()->json($customer, 200);
-        } else {
-            return response()->json(['message' => 'Customer not found'], 404);
-        }
-    }
-
-    public function getCustomerOrders($customerId)
-    {
-        // Sử dụng Query Builder để join hai bảng và lấy dữ liệu
-        $data = DB::table('customers')
-            ->join('orders', 'customers.id', '=', 'orders.customer_id')
-            ->where('customers.id', $customerId)
-            ->select('customers.username', 'orders.order_details')
-            ->get();
-
-        if ($data->isNotEmpty()) {
-            return response()->json($data, 200);
-        } else {
-            return response()->json(['message' => 'Customer or orders not found'], 404);
-        }
+        return redirect()->route('dashboard')->with('success', 'Customer deleted successfully.');
     }
 }
